@@ -13,12 +13,210 @@ import io
 import json
 from datetime import datetime
 
-# Page configuration
+# Page configuration with dark theme
 st.set_page_config(
-    page_title="AI Diet Health Dashboard with RAG",
-    page_icon="🥗",
-    layout="wide"
+    page_title="Analyze Your Diet",
+    page_icon="🍏",
+    layout="wide",
+    initial_sidebar_state="collapsed"
 )
+
+# Custom CSS for DeepSeek-like styling
+st.markdown("""
+<style>
+    /* Dark theme */
+    .stApp {
+        background-color: #0a0a0a;
+        color: #e0e0e0;
+    }
+    
+    /* Hide default Streamlit elements */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    
+    /* Custom header */
+    .custom-header {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        padding: 1.5rem 2rem;
+        border-radius: 16px;
+        margin-bottom: 2rem;
+        border: 1px solid #2a2a3e;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    }
+    
+    .custom-header h1 {
+        color: #ffffff;
+        font-size: 2rem;
+        font-weight: 600;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .custom-header p {
+        color: #a0a0a0;
+        margin: 0.5rem 0 0 0;
+        font-size: 0.95rem;
+    }
+    
+    /* Chat-like container */
+    .chat-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 0 1rem;
+    }
+    
+    /* Message bubbles */
+    .user-message {
+        background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+        padding: 1.25rem 1.5rem;
+        border-radius: 18px;
+        margin: 1rem 0;
+        border: 1px solid #2563eb;
+        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
+    }
+    
+    .ai-message {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        padding: 1.5rem;
+        border-radius: 18px;
+        margin: 1rem 0;
+        border: 1px solid #2a2a3e;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+    
+    .ai-message h3 {
+        color: #60a5fa;
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    /* Buttons */
+    .stButton > button {
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        font-size: 1rem;
+        width: 100%;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }
+    
+    .stButton > button:hover {
+        background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
+        transform: translateY(-2px);
+    }
+    
+    /* File uploader */
+    .uploadedFile {
+        background: #1a1a2e;
+        border: 2px dashed #2a2a3e;
+        border-radius: 12px;
+        padding: 2rem;
+    }
+    
+    /* Metrics */
+    .metric-card {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        padding: 1.5rem;
+        border-radius: 16px;
+        border: 1px solid #2a2a3e;
+        text-align: center;
+        margin: 0.5rem;
+    }
+    
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin: 0.5rem 0;
+    }
+    
+    .metric-label {
+        color: #a0a0a0;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    
+    /* Tags */
+    .food-tag {
+        display: inline-block;
+        background: #1e3a8a;
+        color: #93c5fd;
+        padding: 0.4rem 1rem;
+        border-radius: 20px;
+        margin: 0.25rem;
+        font-size: 0.85rem;
+        border: 1px solid #2563eb;
+    }
+    
+    /* Status badge */
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: #065f46;
+        color: #6ee7b7;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        border: 1px solid #059669;
+    }
+    
+    /* Loading spinner */
+    .stSpinner > div {
+        border-color: #3b82f6 !important;
+    }
+    
+    /* Expander */
+    .streamlit-expanderHeader {
+        background: #1a1a2e;
+        border-radius: 12px;
+        border: 1px solid #2a2a3e;
+        color: #e0e0e0 !important;
+    }
+    
+    /* Info boxes */
+    .stAlert {
+        background: #1a1a2e;
+        border: 1px solid #2a2a3e;
+        border-radius: 12px;
+        color: #e0e0e0;
+    }
+    
+    /* Progress bar */
+    .stProgress > div > div {
+        background: linear-gradient(90deg, #2563eb 0%, #3b82f6 100%);
+    }
+    
+    /* Input fields */
+    .stTextInput > div > div > input {
+        background: #1a1a2e;
+        border: 1px solid #2a2a3e;
+        border-radius: 12px;
+        color: #e0e0e0;
+        padding: 0.75rem 1rem;
+    }
+    
+    .stTextInput > div > div > input:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    }
+</style>
+""", unsafe_allow_html=True)
 
 # Initialize session state
 if 'chroma_db' not in st.session_state:
@@ -29,6 +227,8 @@ if 'analysis_history' not in st.session_state:
     st.session_state.analysis_history = []
 if 'nutrition_knowledge_loaded' not in st.session_state:
     st.session_state.nutrition_knowledge_loaded = False
+if 'ollama_url' not in st.session_state:
+    st.session_state.ollama_url = "http://localhost:11434"
 
 # Nutritional knowledge base
 NUTRITION_KNOWLEDGE = """
@@ -86,19 +286,16 @@ NUTRITION_KNOWLEDGE = """
 def initialize_rag_system(ollama_url="http://localhost:11434"):
     """Initialize the RAG system with ChromaDB and LangChain"""
     try:
-        # Initialize Ollama embeddings
         embeddings = OllamaEmbeddings(
             base_url=ollama_url,
             model="llama3.2:3b"
         )
         
-        # Initialize ChromaDB client
         chroma_client = chromadb.Client(Settings(
             anonymized_telemetry=False,
             allow_reset=True
         ))
         
-        # Create or get collection
         try:
             chroma_client.delete_collection("nutrition_knowledge")
         except:
@@ -109,7 +306,6 @@ def initialize_rag_system(ollama_url="http://localhost:11434"):
             metadata={"description": "Nutritional information and guidelines"}
         )
         
-        # Split nutrition knowledge into chunks
         text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=500,
             chunk_overlap=50,
@@ -119,7 +315,6 @@ def initialize_rag_system(ollama_url="http://localhost:11434"):
         documents = [Document(page_content=NUTRITION_KNOWLEDGE)]
         splits = text_splitter.split_documents(documents)
         
-        # Create vector store
         vectorstore = Chroma.from_documents(
             documents=splits,
             embedding=embeddings,
@@ -127,14 +322,12 @@ def initialize_rag_system(ollama_url="http://localhost:11434"):
             client=chroma_client
         )
         
-        # Initialize Ollama LLM
         llm = OllamaLLM(
             base_url=ollama_url,
             model="llama3.2:3b",
             temperature=0.7
         )
         
-        # Create custom prompt template
         prompt_template = """You are an expert nutritionist analyzing diet data. Use the following nutritional information to provide accurate, evidence-based advice.
 
 Context: {context}
@@ -154,7 +347,6 @@ Answer:"""
             input_variables=["context", "question"]
         )
         
-        # Create retrieval QA chain
         qa_chain = RetrievalQA.from_chain_type(
             llm=llm,
             chain_type="stuff",
@@ -166,7 +358,7 @@ Answer:"""
         return vectorstore, qa_chain, True
         
     except Exception as e:
-        st.error(f"Error initializing RAG system: {str(e)}")
+        st.error(f"Error initializing system: {str(e)}")
         return None, None, False
 
 def extract_text_from_pdf(pdf_file):
@@ -223,7 +415,6 @@ def calculate_health_score(category_counts):
 def analyze_diet_with_rag(qa_chain, food_data, category_counts, health_score):
     """Use RAG to analyze diet with retrieved nutritional knowledge"""
     
-    # Prepare the query with diet information
     query = f"""
     Analyze this monthly diet data:
     
@@ -267,115 +458,130 @@ def add_documents_to_vectorstore(vectorstore, documents, embeddings):
 
 # Main App
 def main():
-    st.title("🥗 AI Diet Health Dashboard with RAG")
-    st.markdown("### Powered by LangChain, ChromaDB, and Ollama Llama 3.2 3B")
+    # Custom header
+    st.markdown("""
+        <div class="custom-header">
+            <h1>Diet Analyzer</h1>
+        </div>
+    """, unsafe_allow_html=True)
     
-    # Sidebar for settings
-    with st.sidebar:
-        st.header("⚙️ Settings")
-        ollama_url = st.text_input(
-            "Ollama URL",
-            value="http://localhost:11434",
-            help="URL where Ollama is running"
-        )
+    # Chat container
+    st.markdown('<div class="chat-container">', unsafe_allow_html=True)
+    
+    # Settings in collapsible section
+    with st.expander("System", expanded=not st.session_state.nutrition_knowledge_loaded):
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            ollama_url = st.text_input(
+                "Ollama API URL",
+                value=st.session_state.ollama_url,
+                help="Default: http://localhost:11434"
+            )
+            st.session_state.ollama_url = ollama_url
         
-        if st.button("Initialize RAG System"):
-            with st.spinner("Initializing RAG system..."):
-                vectorstore, qa_chain, success = initialize_rag_system(ollama_url)
-                if success:
-                    st.session_state.chroma_db = vectorstore
-                    st.session_state.qa_chain = qa_chain
-                    st.session_state.nutrition_knowledge_loaded = True
-                    st.success("✅ RAG system initialized!")
-                else:
-                    st.error("❌ Failed to initialize. Make sure Ollama is running.")
+        with col2:
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("Initialize", use_container_width=True):
+                with st.spinner("Initializing agent..."):
+                    vectorstore, qa_chain, success = initialize_rag_system(ollama_url)
+                    if success:
+                        st.session_state.chroma_db = vectorstore
+                        st.session_state.qa_chain = qa_chain
+                        st.session_state.nutrition_knowledge_loaded = True
+                        st.success("✅ System ready!")
+                        st.rerun()
         
-        st.markdown("---")
-        st.markdown("### 📚 Knowledge Base Status")
         if st.session_state.nutrition_knowledge_loaded:
-            st.success("✅ Nutrition knowledge loaded")
-        else:
-            st.warning("⚠️ RAG system not initialized")
-        
-        st.markdown("---")
-        st.markdown("### 🔧 Setup Instructions")
-        st.code("ollama pull llama3.2:3b", language="bash")
-        st.code("ollama serve", language="bash")
+            st.markdown("""
+                <div style="margin-top: 1rem;">
+                    <span class="status-badge"> ● System Active</span>
+                </div>
+            """, unsafe_allow_html=True)
     
-    # Main content area
-    col1, col2 = st.columns([2, 1])
+    # Main interaction area
+    st.markdown("<br>", unsafe_allow_html=True)
     
-    with col1:
-        st.header("📄 Upload Your Diet Log")
-        uploaded_file = st.file_uploader(
-            "Upload a PDF containing your food log",
-            type=['pdf'],
-            help="Upload a PDF with your monthly food diary"
-        )
-        
-        if uploaded_file:
-            with st.spinner("Processing PDF..."):
-                # Extract text from PDF
-                pdf_text = extract_text_from_pdf(uploaded_file)
+    # File upload in a message-like container
+    st.markdown('<div class="user-message">', unsafe_allow_html=True)
+    st.markdown("### 📄 Upload Your Diet Log")
+    uploaded_file = st.file_uploader(
+        "Upload a PDF containing your monthly food diary",
+        type=['pdf'],
+        help="Supported format: PDF",
+        label_visibility="collapsed"
+    )
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    if uploaded_file:
+        with st.spinner("Processing..."):
+            pdf_text = extract_text_from_pdf(uploaded_file)
+            
+            if pdf_text:
+                words = pdf_text.lower().split()
+                food_keywords = set(words) - {'the', 'and', 'with', 'for', 'week', 'day', 
+                                               'breakfast', 'lunch', 'dinner', 'snack'}
+                foods = list(food_keywords)[:50]
                 
-                if pdf_text:
-                    st.success(f"✅ PDF processed: {len(pdf_text)} characters extracted")
-                    
-                    # Extract food items (simple parsing)
-                    words = pdf_text.lower().split()
-                    food_keywords = set(words) - {'the', 'and', 'with', 'for', 'week', 'day', 
-                                                   'breakfast', 'lunch', 'dinner', 'snack'}
-                    foods = list(food_keywords)[:50]  # Limit to 50 items
-                    
-                    st.session_state.foods = foods
-                    st.session_state.pdf_text = pdf_text
-                    
-                    # Show extracted foods
-                    with st.expander("📋 Extracted Foods", expanded=True):
-                        st.write(f"**{len(foods)} food items detected**")
-                        st.write(", ".join(foods[:30]))
-                        if len(foods) > 30:
-                            st.write(f"... and {len(foods) - 30} more")
+                st.session_state.foods = foods
+                st.session_state.pdf_text = pdf_text
+                
+                # Show extracted data in AI message style
+                st.markdown('<div class="ai-message">', unsafe_allow_html=True)
+                st.markdown("### ✅ Document Processed")
+                
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.markdown(f"""
+                        <div class="metric-card">
+                            <div class="metric-label">Food Items</div>
+                            <div class="metric-value">{len(foods)}</div>
+                        </div>
+                    """, unsafe_allow_html=True)
+                
+                with col2:
+                    st.markdown(f"""
+                        <div class="metric-card">
+                            <div class="metric-label">Characters</div>
+                            <div class="metric-value">{len(pdf_text)}</div>
+                        </div>
+                    """, unsafe_allow_html=True)
+                
+                with col3:
+                    category_counts, _ = categorize_foods(foods)
+                    health_score = calculate_health_score(category_counts)
+                    st.markdown(f"""
+                        <div class="metric-card">
+                            <div class="metric-label">Preview Score</div>
+                            <div class="metric-value">{health_score}</div>
+                        </div>
+                    """, unsafe_allow_html=True)
+                
+                st.markdown("<br>", unsafe_allow_html=True)
+                st.markdown("**Sample extracted foods:**")
+                st.markdown(" ".join([f'<span class="food-tag">{food}</span>' for food in foods[:15]]), unsafe_allow_html=True)
+                
+                st.markdown('</div>', unsafe_allow_html=True)
     
-    with col2:
-        st.header("📊 Quick Stats")
-        if 'foods' in st.session_state:
-            foods = st.session_state.foods
-            st.metric("Food Items", len(foods))
-            
-            category_counts, categorized = categorize_foods(foods)
-            health_score = calculate_health_score(category_counts)
-            
-            st.metric("Health Score", f"{health_score}/100")
-            
-            # Show top categories
-            st.markdown("**Top Categories:**")
-            sorted_cats = sorted(category_counts.items(), key=lambda x: x[1], reverse=True)
-            for cat, count in sorted_cats[:3]:
-                if count > 0:
-                    st.write(f"• {cat.title()}: {count}")
-    
-    # Analysis section
+    # Analysis button
     if 'foods' in st.session_state and st.session_state.nutrition_knowledge_loaded:
-        st.markdown("---")
-        
-        if st.button("🧠 Analyze Diet with RAG", type="primary", use_container_width=True):
-            with st.spinner("Analyzing your diet with AI and nutritional knowledge base..."):
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("Analyze My Diet", use_container_width=True):
+            with st.spinner("Analyzing..."):
                 foods = st.session_state.foods
                 category_counts, categorized = categorize_foods(foods)
                 health_score = calculate_health_score(category_counts)
                 
-                # Add user's diet to vector store for better context
+                # Add to vector store
                 diet_doc = Document(
                     page_content=f"User's diet contains: {', '.join(foods)}. {st.session_state.pdf_text[:1000]}"
                 )
                 add_documents_to_vectorstore(
                     st.session_state.chroma_db,
                     [diet_doc],
-                    OllamaEmbeddings(base_url=ollama_url, model="llama3.2:3b")
+                    OllamaEmbeddings(base_url=st.session_state.ollama_url, model="llama3.2:3b")
                 )
                 
-                # Perform RAG analysis
+                # Perform analysis
                 analysis, sources = analyze_diet_with_rag(
                     st.session_state.qa_chain,
                     foods,
@@ -383,7 +589,6 @@ def main():
                     health_score
                 )
                 
-                # Store in history
                 st.session_state.analysis_history.append({
                     'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                     'health_score': health_score,
@@ -392,66 +597,97 @@ def main():
                 })
                 
                 # Display results
-                st.markdown("## 🎯 Analysis Results")
+                st.markdown("<br>", unsafe_allow_html=True)
                 
-                # Health Score Card
-                col1, col2, col3 = st.columns(3)
+                # Health score in prominent display
+                st.markdown('<div class="ai-message">', unsafe_allow_html=True)
+                st.markdown("### 📊 Your Health Score")
+                
+                col1, col2, col3, col4 = st.columns(4)
                 with col1:
-                    st.metric("Overall Health Score", f"{health_score}/100")
-                with col2:
-                    color = "🟢" if health_score > 70 else "🟡" if health_score > 40 else "🔴"
-                    st.metric("Status", f"{color} {'Excellent' if health_score > 70 else 'Good' if health_score > 40 else 'Needs Improvement'}")
-                with col3:
-                    total_healthy = category_counts['vegetables'] + category_counts['fruits']
-                    st.metric("Healthy Foods", total_healthy)
+                    st.markdown(f"""
+                        <div class="metric-card">
+                            <div class="metric-label">Overall Score</div>
+                            <div class="metric-value">{health_score}</div>
+                        </div>
+                    """, unsafe_allow_html=True)
                 
-                st.markdown("---")
+                with col2:
+                    status = "Excellent" if health_score > 70 else "Good" if health_score > 40 else "Needs Work"
+                    st.markdown(f"""
+                        <div class="metric-card">
+                            <div class="metric-label">Status</div>
+                            <div class="metric-value" style="font-size: 1.5rem;">{status}</div>
+                        </div>
+                    """, unsafe_allow_html=True)
+                
+                with col3:
+                    healthy_items = category_counts['vegetables'] + category_counts['fruits']
+                    st.markdown(f"""
+                        <div class="metric-card">
+                            <div class="metric-label">Healthy Foods</div>
+                            <div class="metric-value">{healthy_items}</div>
+                        </div>
+                    """, unsafe_allow_html=True)
+                
+                with col4:
+                    st.markdown(f"""
+                        <div class="metric-card">
+                            <div class="metric-label">Processed</div>
+                            <div class="metric-value">{category_counts['processed']}</div>
+                        </div>
+                    """, unsafe_allow_html=True)
+                
+                st.markdown('</div>', unsafe_allow_html=True)
                 
                 # AI Analysis
-                st.markdown("### 🤖 AI-Powered Nutritional Analysis")
-                st.info(analysis)
+                st.markdown("<br>", unsafe_allow_html=True)
+                st.markdown('<div class="ai-message">', unsafe_allow_html=True)
+                st.markdown("### Nutritional Analysis")
+                st.markdown(analysis)
+                st.markdown('</div>', unsafe_allow_html=True)
                 
-                # Category Breakdown
-                st.markdown("### 📊 Category Breakdown")
-                cols = st.columns(4)
-                for idx, (category, count) in enumerate(category_counts.items()):
-                    with cols[idx % 4]:
-                        st.metric(category.replace('_', ' ').title(), count)
+                # Category breakdown
+                st.markdown("<br>", unsafe_allow_html=True)
+                st.markdown('<div class="ai-message">', unsafe_allow_html=True)
+                st.markdown("### 📋 Detailed Breakdown")
                 
-                # Retrieved Sources (optional)
-                with st.expander("📚 Referenced Nutritional Guidelines"):
-                    if sources:
-                        for idx, doc in enumerate(sources[:3]):
-                            st.markdown(f"**Source {idx + 1}:**")
-                            st.text(doc.page_content[:200] + "...")
-                    else:
-                        st.write("No specific sources retrieved")
+                col1, col2, col3, col4 = st.columns(4)
+                categories_list = list(category_counts.items())
+                for idx, (category, count) in enumerate(categories_list):
+                    with [col1, col2, col3, col4][idx % 4]:
+                        st.markdown(f"""
+                            <div style="text-align: center; padding: 1rem;">
+                                <div style="color: #a0a0a0; font-size: 0.85rem; text-transform: uppercase;">{category.replace('_', ' ')}</div>
+                                <div style="color: #60a5fa; font-size: 1.8rem; font-weight: 700; margin-top: 0.5rem;">{count}</div>
+                            </div>
+                        """, unsafe_allow_html=True)
                 
-                # Detailed breakdown by category
-                with st.expander("🔍 Detailed Food Categories"):
+                st.markdown('</div>', unsafe_allow_html=True)
+                
+                # Detailed foods by category
+                with st.expander("🔍 View All Foods by Category"):
                     for category, items in categorized.items():
                         if items:
-                            st.markdown(f"**{category.title()}** ({len(items)} items)")
-                            st.write(", ".join(items[:10]))
-                            if len(items) > 10:
-                                st.write(f"... and {len(items) - 10} more")
+                            st.markdown(f"**{category.replace('_', ' ').title()}** ({len(items)} items)")
+                            st.markdown(" ".join([f'<span class="food-tag">{item}</span>' for item in items[:20]]), unsafe_allow_html=True)
+                            if len(items) > 20:
+                                st.markdown(f"<p style='color: #a0a0a0; font-size: 0.85rem;'>... and {len(items) - 20} more</p>", unsafe_allow_html=True)
+                            st.markdown("<br>", unsafe_allow_html=True)
     
     elif 'foods' in st.session_state and not st.session_state.nutrition_knowledge_loaded:
-        st.warning("⚠️ Please initialize the RAG system from the sidebar first!")
+        st.warning("⚠️ Please initialize the system first using the settings above.")
     
-    # Analysis History
+    # Analysis history
     if st.session_state.analysis_history:
-        st.markdown("---")
-        st.header("📜 Analysis History")
-        
-        for idx, record in enumerate(reversed(st.session_state.analysis_history[-5:])):
-            with st.expander(f"Analysis from {record['timestamp']} - Score: {record['health_score']}/100"):
-                st.write(record['analysis'][:500] + "...")
-                
-                cols = st.columns(4)
-                for jdx, (cat, count) in enumerate(list(record['categories'].items())[:4]):
-                    with cols[jdx]:
-                        st.metric(cat.title(), count)
+        st.markdown("<br><br>", unsafe_allow_html=True)
+        with st.expander("📜 Previous Analyses"):
+            for idx, record in enumerate(reversed(st.session_state.analysis_history[-5:])):
+                st.markdown(f"**{record['timestamp']}** • Score: {record['health_score']}/100")
+                st.text(record['analysis'][:300] + "...")
+                st.markdown("---")
+    
+    st.markdown('</div>', unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
