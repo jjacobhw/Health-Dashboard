@@ -576,7 +576,7 @@ def main():
     
     # File upload in a message-like container
     st.markdown('<div class="user-message">', unsafe_allow_html=True)
-    st.markdown("### 📄 Upload Your Files")
+    st.markdown("### Upload Your Files")
     uploaded_file = st.file_uploader(
         "Upload your food diary or diet log",
         type=['pdf', 'txt', 'docx', 'csv'],
@@ -611,7 +611,7 @@ def main():
                 
                 # Show extracted data in AI message style
                 st.markdown('<div class="ai-message">', unsafe_allow_html=True)
-                st.markdown("### ✅ Document Processed")
+                st.markdown("### Document Processed")
                 
                 col1, col2, col3 = st.columns(3)
                 with col1:
@@ -686,7 +686,7 @@ def main():
                 
                 # Health score in prominent display
                 st.markdown('<div class="ai-message">', unsafe_allow_html=True)
-                st.markdown("### 📊 Your Health Score")
+                st.markdown("### Your Health Score")
                 
                 col1, col2, col3, col4 = st.columns(4)
                 with col1:
@@ -735,7 +735,7 @@ def main():
                 # Category breakdown
                 st.markdown("<br>", unsafe_allow_html=True)
                 st.markdown('<div class="ai-message">', unsafe_allow_html=True)
-                st.markdown("### 📋 Detailed Breakdown")
+                st.markdown("### Detailed Breakdown")
                 
                 # Include 'other' category in display
                 display_categories = {k: v for k, v in category_counts.items() if v > 0}
@@ -767,12 +767,12 @@ def main():
                             st.markdown("<br>", unsafe_allow_html=True)
     
     elif 'foods' in st.session_state and not st.session_state.nutrition_knowledge_loaded:
-        st.warning("⚠️ Please initialize the system first using the settings above.")
+        st.warning("Please initialize the system first using the settings above.")
     
     # Analysis history
     if st.session_state.analysis_history:
         st.markdown("<br><br>", unsafe_allow_html=True)
-        with st.expander("📜 Previous Analyses"):
+        with st.expander("Previous Analyses"):
             for idx, record in enumerate(reversed(st.session_state.analysis_history[-5:])):
                 st.markdown(f"**{record['timestamp']}** • Score: {record['health_score']}/100")
                 st.text(record['analysis'][:300] + "...")
