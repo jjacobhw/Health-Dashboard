@@ -501,7 +501,7 @@ def main():
     
     # File upload in a message-like container
     st.markdown('<div class="user-message">', unsafe_allow_html=True)
-    st.markdown("### 📄 Upload Your Diet Log")
+    st.markdown("### 📄 Upload Your Files")
     uploaded_file = st.file_uploader(
         "Upload a PDF containing your monthly food diary",
         type=['pdf'],
