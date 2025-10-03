@@ -458,45 +458,43 @@ def add_documents_to_vectorstore(vectorstore, documents, embeddings):
 
 # Main App
 def main():
-    # Custom header
     st.markdown("""
-        <div class="custom-header">
-            <h1>Diet Analyzer</h1>
-        </div>
+        <h1>Diet Analyzer</h1>
     """, unsafe_allow_html=True)
     
-    # Chat container
     st.markdown('<div class="chat-container">', unsafe_allow_html=True)
+    st.markdown('<div class="ai-message">', unsafe_allow_html=True)
+    st.markdown("### System Configuration")
     
-    # Settings in collapsible section
-    with st.expander("System", expanded=not st.session_state.nutrition_knowledge_loaded):
-        col1, col2 = st.columns([3, 1])
-        with col1:
-            ollama_url = st.text_input(
-                "Ollama API URL",
-                value=st.session_state.ollama_url,
-                help="Default: http://localhost:11434"
-            )
-            st.session_state.ollama_url = ollama_url
-        
-        with col2:
-            st.markdown("<br>", unsafe_allow_html=True)
-            if st.button("Initialize", use_container_width=True):
-                with st.spinner("Initializing agent..."):
-                    vectorstore, qa_chain, success = initialize_rag_system(ollama_url)
-                    if success:
-                        st.session_state.chroma_db = vectorstore
-                        st.session_state.qa_chain = qa_chain
-                        st.session_state.nutrition_knowledge_loaded = True
-                        st.success("✅ System ready!")
-                        st.rerun()
-        
-        if st.session_state.nutrition_knowledge_loaded:
-            st.markdown("""
-                <div style="margin-top: 1rem;">
-                    <span class="status-badge"> ● System Active</span>
-                </div>
-            """, unsafe_allow_html=True)
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        ollama_url = st.text_input(
+            "Ollama API URL",
+            value=st.session_state.ollama_url,
+            help="Default: http://localhost:11434"
+        )
+        st.session_state.ollama_url = ollama_url
+    
+    with col2:
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("Initialize", use_container_width=True):
+            with st.spinner("Initializing agent..."):
+                vectorstore, qa_chain, success = initialize_rag_system(ollama_url)
+                if success:
+                    st.session_state.chroma_db = vectorstore
+                    st.session_state.qa_chain = qa_chain
+                    st.session_state.nutrition_knowledge_loaded = True
+                    st.success("✅ System ready!")
+                    st.rerun()
+    
+    if st.session_state.nutrition_knowledge_loaded:
+        st.markdown("""
+            <div style="margin-top: 1rem;">
+                <span class="status-badge"> ● System Active</span>
+            </div>
+        """, unsafe_allow_html=True)
+    
+    st.markdown('</div>', unsafe_allow_html=True)
     
     # Main interaction area
     st.markdown("<br>", unsafe_allow_html=True)
