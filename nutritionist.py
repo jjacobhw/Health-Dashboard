@@ -12,6 +12,8 @@ import PyPDF2
 import io
 import json
 from datetime import datetime
+import docx
+import pandas as pd
 
 # Page configuration with dark theme
 st.set_page_config(
@@ -373,21 +375,83 @@ def extract_text_from_pdf(pdf_file):
         st.error(f"Error reading PDF: {str(e)}")
         return None
 
+def extract_text_from_txt(txt_file):
+    """Extract text from uploaded TXT file"""
+    try:
+        text = txt_file.read().decode('utf-8')
+        return text
+    except Exception as e:
+        st.error(f"Error reading TXT file: {str(e)}")
+        return None
+
+def extract_text_from_docx(docx_file):
+    """Extract text from uploaded DOCX file"""
+    try:
+        doc = docx.Document(io.BytesIO(docx_file.read()))
+        text = ""
+        for paragraph in doc.paragraphs:
+            text += paragraph.text + "\n"
+        return text
+    except Exception as e:
+        st.error(f"Error reading DOCX file: {str(e)}")
+        return None
+
+def extract_text_from_csv(csv_file):
+    """Extract text from uploaded CSV file"""
+    try:
+        df = pd.read_csv(io.BytesIO(csv_file.read()))
+        # Convert all columns to string and combine
+        text = " ".join(df.astype(str).values.flatten())
+        return text
+    except Exception as e:
+        st.error(f"Error reading CSV file: {str(e)}")
+        return None
+
+def extract_text_from_file(uploaded_file):
+    """Extract text from various file formats"""
+    file_extension = uploaded_file.name.split('.')[-1].lower()
+    
+    if file_extension == 'pdf':
+        return extract_text_from_pdf(uploaded_file)
+    elif file_extension == 'txt':
+        return extract_text_from_txt(uploaded_file)
+    elif file_extension == 'docx':
+        return extract_text_from_docx(uploaded_file)
+    elif file_extension == 'csv':
+        return extract_text_from_csv(uploaded_file)
+    else:
+        st.error(f"Unsupported file format: {file_extension}")
+        return None
+
 def categorize_foods(food_list):
     """Categorize foods into groups"""
     categories = {
         'vegetables': ['lettuce', 'carrot', 'broccoli', 'spinach', 'kale', 'tomato', 
-                      'cucumber', 'pepper', 'celery', 'cabbage', 'salad', 'greens', 'beans'],
+                      'cucumber', 'pepper', 'celery', 'cabbage', 'salad', 'greens', 'beans',
+                      'cauliflower', 'zucchini', 'eggplant', 'mushroom', 'onion', 'garlic',
+                      'asparagus', 'brussels', 'sprouts', 'potato', 'sweet potato', 'yam'],
         'fruits': ['apple', 'banana', 'orange', 'berry', 'berries', 'grape', 'melon', 
-                  'peach', 'pear', 'mango', 'strawberry', 'blueberry'],
+                  'peach', 'pear', 'mango', 'strawberry', 'blueberry', 'raspberry',
+                  'pineapple', 'kiwi', 'cherry', 'plum', 'apricot', 'fig', 'date',
+                  'watermelon', 'cantaloupe', 'honeydew', 'pomegranate', 'coconut'],
         'proteins': ['chicken', 'beef', 'pork', 'fish', 'salmon', 'tuna', 'egg', 
-                    'tofu', 'turkey', 'shrimp', 'meat', 'lentil', 'bean'],
+                    'tofu', 'turkey', 'shrimp', 'meat', 'lentil', 'bean', 'tempeh',
+                    'seitan', 'lamb', 'duck', 'bison', 'venison', 'cod', 'tilapia',
+                    'halibut', 'sardine', 'anchovy', 'crab', 'lobster', 'scallop',
+                    'clam', 'mussel', 'chickpea', 'black bean', 'kidney bean'],
         'grains': ['rice', 'bread', 'pasta', 'cereal', 'oats', 'quinoa', 'wheat', 
-                  'bagel', 'tortilla', 'noodle'],
-        'dairy': ['milk', 'cheese', 'yogurt', 'butter', 'cream'],
+                  'bagel', 'tortilla', 'noodle', 'barley', 'millet', 'buckwheat',
+                  'couscous', 'bulgur', 'farro', 'spelt', 'rye', 'corn', 'popcorn'],
+        'dairy': ['milk', 'cheese', 'yogurt', 'butter', 'cream', 'kefir', 'cottage',
+                 'sour cream', 'whipped cream', 'ice cream', 'ghee', 'whey'],
         'processed': ['pizza', 'burger', 'fries', 'chips', 'candy', 'soda', 
-                     'cookie', 'cake', 'donut'],
-        'healthy_fats': ['avocado', 'nuts', 'seeds', 'olive', 'almond', 'walnut']
+                     'cookie', 'cake', 'donut', 'hot dog', 'nugget', 'sausage',
+                     'bacon', 'ham', 'lunchmeat', 'frozen dinner', 'instant noodle',
+                     'white bread', 'sugar', 'syrup', 'ketchup', 'mayonnaise'],
+        'healthy_fats': ['avocado', 'nuts', 'seeds', 'olive', 'almond', 'walnut',
+                        'pecan', 'cashew', 'pistachio', 'macadamia', 'hazelnut',
+                        'sunflower seed', 'pumpkin seed', 'chia seed', 'flaxseed',
+                        'coconut oil', 'avocado oil', 'nut butter', 'tahini']
     }
     
     category_counts = {cat: 0 for cat in categories.keys()}
@@ -395,11 +459,21 @@ def categorize_foods(food_list):
     
     for food in food_list:
         food_lower = food.lower()
+        categorized = False
         for category, keywords in categories.items():
             if any(keyword in food_lower for keyword in keywords):
                 category_counts[category] += 1
                 categorized_items[category].append(food)
+                categorized = True
                 break
+        
+        # If not categorized, add to "other" category
+        if not categorized:
+            if 'other' not in category_counts:
+                category_counts['other'] = 0
+                categorized_items['other'] = []
+            category_counts['other'] += 1
+            categorized_items['other'].append(food)
     
     return category_counts, categorized_items
 
@@ -428,6 +502,7 @@ def analyze_diet_with_rag(qa_chain, food_data, category_counts, health_score):
     - Dairy: {category_counts['dairy']} items
     - Processed foods: {category_counts['processed']} items
     - Healthy fats: {category_counts['healthy_fats']} items
+    - Other: {category_counts.get('other', 0)} items
     
     Current health score: {health_score}/100
     
@@ -503,25 +578,36 @@ def main():
     st.markdown('<div class="user-message">', unsafe_allow_html=True)
     st.markdown("### 📄 Upload Your Files")
     uploaded_file = st.file_uploader(
-        "Upload a PDF containing your monthly food diary",
-        type=['pdf'],
-        help="Supported format: PDF",
+        "Upload your food diary or diet log",
+        type=['pdf', 'txt', 'docx', 'csv'],
+        help="Supported formats: PDF, TXT, DOCX, CSV",
         label_visibility="collapsed"
     )
     st.markdown('</div>', unsafe_allow_html=True)
     
     if uploaded_file:
         with st.spinner("Processing..."):
-            pdf_text = extract_text_from_pdf(uploaded_file)
+            file_text = extract_text_from_file(uploaded_file)
             
-            if pdf_text:
-                words = pdf_text.lower().split()
-                food_keywords = set(words) - {'the', 'and', 'with', 'for', 'week', 'day', 
-                                               'breakfast', 'lunch', 'dinner', 'snack'}
-                foods = list(food_keywords)[:50]
+            if file_text:
+                words = file_text.lower().split()
+                # Enhanced stop words list
+                stop_words = {'the', 'and', 'with', 'for', 'week', 'day', 'month', 'year',
+                             'breakfast', 'lunch', 'dinner', 'snack', 'meal', 'food',
+                             'this', 'that', 'these', 'those', 'have', 'had', 'has',
+                             'eat', 'ate', 'eating', 'drink', 'drank', 'drinking',
+                             'morning', 'afternoon', 'evening', 'night', 'today',
+                             'yesterday', 'tomorrow', 'monday', 'tuesday', 'wednesday',
+                             'thursday', 'friday', 'saturday', 'sunday', 'january',
+                             'february', 'march', 'april', 'may', 'june', 'july',
+                             'august', 'september', 'october', 'november', 'december'}
+                
+                food_keywords = set(words) - stop_words
+                # Filter out very short words (likely not food items)
+                foods = [word for word in list(food_keywords) if len(word) > 2][:50]
                 
                 st.session_state.foods = foods
-                st.session_state.pdf_text = pdf_text
+                st.session_state.file_text = file_text
                 
                 # Show extracted data in AI message style
                 st.markdown('<div class="ai-message">', unsafe_allow_html=True)
@@ -540,7 +626,7 @@ def main():
                     st.markdown(f"""
                         <div class="metric-card">
                             <div class="metric-label">Characters</div>
-                            <div class="metric-value">{len(pdf_text)}</div>
+                            <div class="metric-value">{len(file_text)}</div>
                         </div>
                     """, unsafe_allow_html=True)
                 
@@ -555,6 +641,7 @@ def main():
                     """, unsafe_allow_html=True)
                 
                 st.markdown("<br>", unsafe_allow_html=True)
+                st.markdown(f"**File type:** {uploaded_file.name.split('.')[-1].upper()}")
                 st.markdown("**Sample extracted foods:**")
                 st.markdown(" ".join([f'<span class="food-tag">{food}</span>' for food in foods[:15]]), unsafe_allow_html=True)
                 
@@ -571,7 +658,7 @@ def main():
                 
                 # Add to vector store
                 diet_doc = Document(
-                    page_content=f"User's diet contains: {', '.join(foods)}. {st.session_state.pdf_text[:1000]}"
+                    page_content=f"User's diet contains: {', '.join(foods)}. {st.session_state.file_text[:1000]}"
                 )
                 add_documents_to_vectorstore(
                     st.session_state.chroma_db,
@@ -650,10 +737,16 @@ def main():
                 st.markdown('<div class="ai-message">', unsafe_allow_html=True)
                 st.markdown("### 📋 Detailed Breakdown")
                 
-                col1, col2, col3, col4 = st.columns(4)
-                categories_list = list(category_counts.items())
+                # Include 'other' category in display
+                display_categories = {k: v for k, v in category_counts.items() if v > 0}
+                categories_list = list(display_categories.items())
+                
+                # Create dynamic columns based on number of categories
+                num_cols = min(4, len(categories_list))
+                cols = st.columns(num_cols)
+                
                 for idx, (category, count) in enumerate(categories_list):
-                    with [col1, col2, col3, col4][idx % 4]:
+                    with cols[idx % num_cols]:
                         st.markdown(f"""
                             <div style="text-align: center; padding: 1rem;">
                                 <div style="color: #a0a0a0; font-size: 0.85rem; text-transform: uppercase;">{category.replace('_', ' ')}</div>
