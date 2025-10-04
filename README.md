@@ -6,7 +6,6 @@ A powerful AI-driven nutritional analysis tool that uses RAG (Retrieval-Augmente
 
 - **Multi-format Support**: Upload diet logs in PDF, TXT, DOCX, or CSV formats
 - **AI-Powered Analysis**: Uses Ollama LLM with RAG for intelligent nutritional insights
-- **Health Scoring**: Automatic calculation of diet health scores based on food categories
 - **Category Breakdown**: Detailed analysis across 8 food categories
 - **Modern UI**: Sleek dark theme with chat-like interface
 - **Analysis History**: Track your dietary improvements over time
@@ -53,7 +52,6 @@ streamlit run nutritionist.py
 
 4. **Analyze your diet**:
    - Click "Analyze My Diet" to get comprehensive insights
-   - Review your health score, category breakdown, and AI recommendations
 
 ## Food Categories
 
@@ -66,18 +64,6 @@ The analyzer categorizes foods into:
 - **Healthy Fats**: Nuts, seeds, avocados, oils
 - **Processed Foods**: Fast food, packaged snacks, sugary items
 - **Other**: Items not fitting other categories
-
-## Health Score Calculation
-
-The health score (0-100) is calculated based on:
-- **Positive factors**: Vegetables, fruits, healthy fats, proteins
-- **Negative factors**: Processed and ultra-processed foods
-- **Balance**: Overall dietary diversity
-
-Score interpretation:
-- **70-100**: Excellent
-- **40-69**: Good
-- **0-39**: Needs Improvement
 
 ## File Format Tips
 
@@ -282,22 +268,6 @@ st.session_state = {
 }
 ```
 
-### Health Score Algorithm
-
-```python
-score = min(100, max(0, 
-    (healthy_foods × 10) - 
-    (processed_foods × 5) + 
-    (protein_foods × 5) + 
-    30  # Base score
-))
-
-Where:
-- healthy_foods = vegetables + fruits + healthy_fats
-- processed_foods = ultra-processed items
-- protein_foods = protein category items
-```
-
 ### Performance Optimizations
 
 1. **Lazy Loading**: RAG system initialized only when needed
@@ -349,11 +319,6 @@ model="llama3.2:3b"  # Change to your preferred model
 - Check file format is supported
 - Ensure file isn't corrupted
 - Try converting to .txt for testing
-
-### Low Health Scores
-- Increase vegetable and fruit intake
-- Reduce processed food consumption
-- Add more whole grains and healthy fats
 
 ## Limitations
 

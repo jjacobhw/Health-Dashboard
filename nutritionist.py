@@ -13,6 +13,7 @@ import io
 import json
 from datetime import datetime
 import docx
+import re
 import pandas as pd
 
 # Page configuration with dark theme
@@ -590,7 +591,8 @@ def main():
             file_text = extract_text_from_file(uploaded_file)
             
             if file_text:
-                words = file_text.lower().split()
+                # Remove punctuation and split into words
+                words = re.sub(r'[^\w\s]', ' ', file_text.lower()).split()
                 # Enhanced stop words list
                 stop_words = {'the', 'and', 'with', 'for', 'week', 'day', 'month', 'year',
                              'breakfast', 'lunch', 'dinner', 'snack', 'meal', 'food',
@@ -603,8 +605,8 @@ def main():
                              'august', 'september', 'october', 'november', 'december'}
                 
                 food_keywords = set(words) - stop_words
-                # Filter out very short words (likely not food items)
-                foods = [word for word in list(food_keywords) if len(word) > 2][:50]
+                # Filter out very short words (likely not food items) and strip any remaining punctuation
+                foods = [word.strip() for word in list(food_keywords) if len(word) > 2][:50]
                 
                 st.session_state.foods = foods
                 st.session_state.file_text = file_text
