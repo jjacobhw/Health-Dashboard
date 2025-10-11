@@ -308,48 +308,13 @@ To use a different Ollama model, update:
 model="llama3.2:3b"  # Change to your preferred model
 ```
 
-## Troubleshooting
-
-### Ollama Connection Issues
-- Ensure Ollama is running: `ollama serve`
-- Check the URL is correct
-- Verify the model is downloaded: `ollama list`
-
-### File Upload Errors
-- Check file format is supported
-- Ensure file isn't corrupted
-- Try converting to .txt for testing
-
-## Limitations
-
-- Analysis quality depends on input detail
-- Works best with structured food diaries
-- Requires local Ollama installation
-- Does not replace professional nutritional advice
-
-## Privacy
-
-- All processing happens locally
-- No data is sent to external servers
-- ChromaDB stores data in memory only
-- Analysis history is session-based
-
-## Contributing
-
-Feel free to fork and enhance:
-- Add more food categories
-- Improve categorization algorithms
-- Enhance the UI/UX
-- Add meal planning features
-- Implement calorie tracking
-
 ## License
 
 This project is open-source and available for personal and educational use.
 
 ## Disclaimer
 
-This tool provides general nutritional information and should not replace professional medical or nutritional advice. Always consult with qualified healthcare providers for personalized dietary recommendations.
+This tool provides general nutritional information and should not be used as a substitute for professional medical or nutritional advice. Always consult with qualified healthcare providers for personalized dietary recommendations.
 
 ## Support
 
